@@ -1,1 +1,44 @@
 @import "tailwindcss";
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/500.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  /* Acento índigo-ardósia */
+  --color-brand-50: #f1f3fa;
+  --color-brand-100: #e2e6f4;
+  --color-brand-200: #c7cee8;
+  --color-brand-300: #a3afd8;
+  --color-brand-400: #7a89c3;
+  --color-brand-500: #5a6aae;
+  --color-brand-600: #46538f;
+  --color-brand-700: #3a4574;
+  --color-brand-800: #323b5f;
+  --color-brand-900: #2b324e;
+  --color-brand-950: #1c2138;
+
+  /* Superfícies e texto */
+  --color-surface: #f8f7f4;
+  --color-card: #ffffff;
+  --color-line: #e7e5e0;
+  --color-ink: #1f2430;
+  --color-ink-soft: #5b6270;
+
+  /* Status (só para status) */
+  --color-status-ok: #15803d;
+  --color-status-ok-soft: #dcfce7;
+  --color-status-warn: #a16207;
+  --color-status-warn-soft: #fef3c7;
+  --color-status-info: #1d4ed8;
+  --color-status-info-soft: #dbeafe;
+  --color-status-danger: #b91c1c;
+  --color-status-danger-soft: #fee2e2;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}
