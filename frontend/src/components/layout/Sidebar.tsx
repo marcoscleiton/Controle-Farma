@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { ClipboardList, LayoutDashboard, Pill, Users, X } from 'lucide-react'
+import { ClipboardList, LayoutDashboard, Pill, Users, Wallet, X } from 'lucide-react'
 
 const itens = [
   { para: '/', rotulo: 'Painel', icone: LayoutDashboard },
   { para: '/clientes', rotulo: 'Clientes', icone: Users },
   { para: '/medicamentos', rotulo: 'Medicamentos', icone: Pill },
   { para: '/compras', rotulo: 'Histórico de compras', icone: ClipboardList },
+  { para: '/financeiro', rotulo: 'Financeiro', icone: Wallet },
 ]
 
 type Props = { aberto: boolean; onFechar: () => void }

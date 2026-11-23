@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 import { Card } from '../components/ui/Card'
 import { botaoPrimario, botaoSecundario, campo, rotuloCampo } from '../components/ui/estilos'
 import { useDados } from '../context/DadosContext'
+import type { FormaPagamento } from '../types'
 import { formatarData, hojeISO, somarDias } from '../utils/datas'
+import { formasPagamento, formatarMoeda, paraCentavos, rotuloPagamento } from '../utils/dinheiro'
 
 export function Compras() {
   const { clientes, medicamentos, compras, adicionarCompra, removerCompra } = useDados()
@@ -13,6 +15,8 @@ export function Compras() {
   const [dataCompra, setDataCompra] = useState(hojeISO())
   const [quantidade, setQuantidade] = useState('1')
   const [diasDeUso, setDiasDeUso] = useState('')
+  const [valor, setValor] = useState('')
+  const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>('pix')
 
   const clientesAtivos = clientes.filter((c) => c.ativo)
   const podeRegistrar = clientesAtivos.length > 0 && medicamentos.length > 0
@@ -21,10 +25,24 @@ export function Compras() {
     e.preventDefault()
     const qtd = Number(quantidade)
     const dias = Number(diasDeUso)
+    const centavos = paraCentavos(valor)
     if (!clienteId || !medicamentoId || !dataCompra || qtd <= 0 || dias <= 0) return
-    adicionarCompra({ clienteId, medicamentoId, dataCompra, quantidade: qtd, diasDeUso: dias })
+    if (Number.isNaN(centavos)) {
+      window.alert('Valor inválido. Use o formato 25,90')
+      return
+    }
+    adicionarCompra({
+      clienteId,
+      medicamentoId,
+      dataCompra,
+      quantidade: qtd,
+      diasDeUso: dias,
+      valorCentavos: centavos,
+      formaPagamento,
+    })
     setQuantidade('1')
     setDiasDeUso('')
+    setValor('')
     setDataCompra(hojeISO())
   }
 
@@ -79,6 +97,18 @@ export function Compras() {
               <label className={rotuloCampo} htmlFor="dias">Duração em dias *</label>
               <input id="dias" type="number" min="1" className={campo} value={diasDeUso} onChange={(e) => setDiasDeUso(e.target.value)} required />
             </div>
+            <div>
+              <label className={rotuloCampo} htmlFor="valor">Valor pago (R$) *</label>
+              <input id="valor" inputMode="decimal" placeholder="25,90" className={campo} value={valor} onChange={(e) => setValor(e.target.value)} required />
+            </div>
+            <div>
+              <label className={rotuloCampo} htmlFor="pagamento">Forma de pagamento *</label>
+              <select id="pagamento" className={campo} value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value as FormaPagamento)}>
+                {formasPagamento.map((f) => (
+                  <option key={f.valor} value={f.valor}>{f.rotulo}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex items-end">
               <button type="submit" className={botaoPrimario}>Registrar compra</button>
             </div>
@@ -98,7 +128,8 @@ export function Compras() {
                   <th className="py-2 pr-4 font-medium">Cliente</th>
                   <th className="py-2 pr-4 font-medium">Medicamento</th>
                   <th className="py-2 pr-4 font-medium">Qtd.</th>
-                  <th className="py-2 pr-4 font-medium">Duração</th>
+                  <th className="py-2 pr-4 font-medium">Valor</th>
+                  <th className="py-2 pr-4 font-medium">Pagamento</th>
                   <th className="py-2 pr-4 font-medium">Recompra prevista</th>
                   <th className="py-2 font-medium" />
                 </tr>
@@ -110,7 +141,8 @@ export function Compras() {
                     <td className="py-3 pr-4 font-medium text-ink">{nomeCliente(c.clienteId)}</td>
                     <td className="py-3 pr-4 text-ink-soft">{nomeMedicamento(c.medicamentoId)}</td>
                     <td className="py-3 pr-4 text-ink-soft">{c.quantidade}</td>
-                    <td className="py-3 pr-4 text-ink-soft">{c.diasDeUso} dias</td>
+                    <td className="py-3 pr-4 text-ink">{formatarMoeda(c.valorCentavos)}</td>
+                    <td className="py-3 pr-4 text-ink-soft">{rotuloPagamento(c.formaPagamento)}</td>
                     <td className="py-3 pr-4 text-ink">{formatarData(somarDias(c.dataCompra, c.diasDeUso))}</td>
                     <td className="py-3 text-right">
                       <button type="button" className={botaoSecundario} onClick={() => remover(c.id)}>

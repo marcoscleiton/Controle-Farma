@@ -6,6 +6,7 @@ const titulos: Record<string, string> = {
   '/clientes': 'Clientes',
   '/medicamentos': 'Medicamentos',
   '/compras': 'Histórico de compras',
+  '/financeiro': 'Financeiro',
 }
 
 export function Header({ onAbrirMenu }: { onAbrirMenu: () => void }) {

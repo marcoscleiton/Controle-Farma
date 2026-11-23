@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react'
 
 type Props = {
   rotulo: string
-  valor: number
+  valor: number | string
   icone: LucideIcon
   perigo?: boolean
 }

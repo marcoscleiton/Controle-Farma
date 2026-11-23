@@ -4,6 +4,8 @@ import { Clientes } from './pages/Clientes'
 import { Compras } from './pages/Compras'
 import { Dashboard } from './pages/Dashboard'
 import { Medicamentos } from './pages/Medicamentos'
+import { Financeiro } from './pages/Financeiro'
+
 
 function App() {
   return (
@@ -13,6 +15,7 @@ function App() {
         <Route path="clientes" element={<Clientes />} />
         <Route path="medicamentos" element={<Medicamentos />} />
         <Route path="compras" element={<Compras />} />
+        <Route path="financeiro" element={<Financeiro />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>

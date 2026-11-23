@@ -39,9 +39,12 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     carregar<Medicamento>(CHAVES.medicamentos),
   )
   const [compras, setCompras] = useState<Compra[]>(() =>
-    carregar<Compra>(CHAVES.compras),
+    carregar<Compra>(CHAVES.compras).map((c) => ({
+      ...c,
+      valorCentavos: c.valorCentavos ?? 0,
+      formaPagamento: c.formaPagamento ?? 'outro',
+    })),
   )
-
   useEffect(() => {
     localStorage.setItem(CHAVES.clientes, JSON.stringify(clientes))
   }, [clientes])
