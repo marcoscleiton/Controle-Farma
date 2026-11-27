@@ -1,32 +1,24 @@
-# React + TypeScript + Vite
+# Controle Farma: frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interface em React + TypeScript + Vite + Tailwind CSS. A descrição completa do projeto está no [README principal](../README.md).
 
-Currently, two official plugins are available:
+## Comandos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+| Comando           | O que faz |
+|-------------------|-----------|
+| `npm run dev`     | Inicia o servidor de desenvolvimento |
+| `npm run build`   | Checa os tipos (TypeScript) e gera a versão de produção em `dist/` |
+| `npm run lint`    | Procura problemas no código (oxlint) |
+| `npm run preview` | Abre a versão gerada pelo build |
 
-## React Compiler
+## Pastas de `src/`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+- `pages/`: uma tela por arquivo (Painel, Clientes, Medicamentos, Compras, Financeiro).
+- `components/layout/`: estrutura fixa da tela (menu lateral e cabeçalho).
+- `components/ui/`: peças reutilizáveis (cards, selos de status, estilos).
+- `context/`: estado global dos dados.
+  - `contexto.ts`: o contexto em si.
+  - `DadosContext.tsx`: o provider que lê e salva no localStorage.
+  - `useDados.ts`: o hook que as telas usam para acessar os dados.
+- `types/`: tipos TypeScript de Cliente, Medicamento e Compra.
+- `utils/`: funções puras de datas, dinheiro (centavos), status e previsões.
