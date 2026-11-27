@@ -1,0 +1,22 @@
+# Dependências (reinstaladas com "npm install")
+node_modules/
+
+# Builds gerados
+dist/
+build/
+
+# Variáveis de ambiente: contêm senhas e segredos, NUNCA vão para o Git
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
