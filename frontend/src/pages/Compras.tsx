@@ -3,13 +3,15 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Card } from '../components/ui/Card'
 import { botaoPrimario, botaoSecundario, campo, rotuloCampo } from '../components/ui/estilos'
-import { useDados } from '../context/DadosContext'
-import type { FormaPagamento } from '../types'
+import { useDados } from '../context/useDados'
+import type { Compra, FormaPagamento } from '../types'
 import { formatarData, hojeISO, somarDias } from '../utils/datas'
 import { formasPagamento, formatarMoeda, paraCentavos, rotuloPagamento } from '../utils/dinheiro'
 
 export function Compras() {
-  const { clientes, medicamentos, compras, adicionarCompra, removerCompra } = useDados()
+  const { clientes, medicamentos, compras, adicionarCompra, atualizarCompra, removerCompra } = useDados()
+  // null = registrando uma nova; com id = editando essa compra
+  const [editandoId, setEditandoId] = useState<string | null>(null)
   const [clienteId, setClienteId] = useState('')
   const [medicamentoId, setMedicamentoId] = useState('')
   const [dataCompra, setDataCompra] = useState(hojeISO())
@@ -18,7 +20,8 @@ export function Compras() {
   const [valor, setValor] = useState('')
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>('pix')
 
-  const clientesAtivos = clientes.filter((c) => c.ativo)
+  // Ao editar, o cliente da compra continua na lista mesmo que tenha sido inativado
+  const clientesAtivos = clientes.filter((c) => c.ativo || c.id === clienteIdEmEdicao())
   const podeRegistrar = clientesAtivos.length > 0 && medicamentos.length > 0
 
   function salvar(e: FormEvent<HTMLFormElement>) {
@@ -31,7 +34,7 @@ export function Compras() {
       window.alert('Valor inválido. Use o formato 25,90')
       return
     }
-    adicionarCompra({
+    const dados = {
       clienteId,
       medicamentoId,
       dataCompra,
@@ -39,11 +42,46 @@ export function Compras() {
       diasDeUso: dias,
       valorCentavos: centavos,
       formaPagamento,
-    })
+    }
+    if (editandoId) {
+      atualizarCompra(editandoId, dados)
+      setEditandoId(null)
+      setClienteId('')
+      setMedicamentoId('')
+    } else {
+      adicionarCompra(dados)
+    }
     setQuantidade('1')
     setDiasDeUso('')
     setValor('')
     setDataCompra(hojeISO())
+  }
+
+  function clienteIdEmEdicao(): string | undefined {
+    return compras.find((c) => c.id === editandoId)?.clienteId
+  }
+
+  function editar(c: Compra) {
+    setEditandoId(c.id)
+    setClienteId(c.clienteId)
+    setMedicamentoId(c.medicamentoId)
+    setDataCompra(c.dataCompra)
+    setQuantidade(String(c.quantidade))
+    setDiasDeUso(String(c.diasDeUso))
+    setValor((c.valorCentavos / 100).toFixed(2).replace('.', ','))
+    setFormaPagamento(c.formaPagamento)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function cancelarEdicao() {
+    setEditandoId(null)
+    setClienteId('')
+    setMedicamentoId('')
+    setDataCompra(hojeISO())
+    setQuantidade('1')
+    setDiasDeUso('')
+    setValor('')
+    setFormaPagamento('pix')
   }
 
   function remover(id: string) {
@@ -57,7 +95,7 @@ export function Compras() {
 
   return (
     <div className="space-y-6">
-      <Card titulo="Registrar compra">
+      <Card titulo={editandoId ? 'Editar compra' : 'Registrar compra'}>
         {!podeRegistrar ? (
           <p className="text-sm text-ink-soft">
             Para registrar uma compra, cadastre antes pelo menos um{' '}
@@ -109,8 +147,13 @@ export function Compras() {
                 ))}
               </select>
             </div>
-            <div className="flex items-end">
-              <button type="submit" className={botaoPrimario}>Registrar compra</button>
+            <div className="flex items-end gap-2">
+              <button type="submit" className={botaoPrimario}>
+                {editandoId ? 'Salvar alterações' : 'Registrar compra'}
+              </button>
+              {editandoId && (
+                <button type="button" className={botaoSecundario} onClick={cancelarEdicao}>Cancelar</button>
+              )}
             </div>
           </form>
         )}
@@ -144,7 +187,10 @@ export function Compras() {
                     <td className="py-3 pr-4 text-ink">{formatarMoeda(c.valorCentavos)}</td>
                     <td className="py-3 pr-4 text-ink-soft">{rotuloPagamento(c.formaPagamento)}</td>
                     <td className="py-3 pr-4 text-ink">{formatarData(somarDias(c.dataCompra, c.diasDeUso))}</td>
-                    <td className="py-3 text-right">
+                    <td className="space-x-2 whitespace-nowrap py-3 text-right">
+                      <button type="button" className={botaoSecundario} onClick={() => editar(c)}>
+                        Editar
+                      </button>
                       <button type="button" className={botaoSecundario} onClick={() => remover(c.id)}>
                         Remover
                       </button>

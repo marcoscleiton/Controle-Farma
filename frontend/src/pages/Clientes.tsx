@@ -2,10 +2,13 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Card } from '../components/ui/Card'
 import { botaoPrimario, botaoSecundario, campo, rotuloCampo } from '../components/ui/estilos'
-import { useDados } from '../context/DadosContext'
+import { useDados } from '../context/useDados'
+import type { Cliente } from '../types'
 
 export function Clientes() {
-  const { clientes, adicionarCliente, alternarAtivoCliente } = useDados()
+  const { clientes, adicionarCliente, atualizarCliente, alternarAtivoCliente } = useDados()
+  // null = cadastrando um novo; com id = editando esse cliente
+  const [editandoId, setEditandoId] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [telefone, setTelefone] = useState('')
   const [observacoes, setObservacoes] = useState('')
@@ -13,21 +16,36 @@ export function Clientes() {
   function salvar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!nome.trim()) return
-    adicionarCliente({
+    const dados = {
       nome: nome.trim(),
       telefone: telefone.trim(),
       observacoes: observacoes.trim(),
-    })
+    }
+    if (editandoId) atualizarCliente(editandoId, dados)
+    else adicionarCliente(dados)
+    limpar()
+  }
+
+  function limpar() {
+    setEditandoId(null)
     setNome('')
     setTelefone('')
     setObservacoes('')
+  }
+
+  function editar(cliente: Cliente) {
+    setEditandoId(cliente.id)
+    setNome(cliente.nome)
+    setTelefone(cliente.telefone)
+    setObservacoes(cliente.observacoes)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const ordenados = [...clientes].sort((a, b) => a.nome.localeCompare(b.nome))
 
   return (
     <div className="space-y-6">
-      <Card titulo="Novo cliente">
+      <Card titulo={editandoId ? 'Editar cliente' : 'Novo cliente'}>
         <form onSubmit={salvar} className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={rotuloCampo} htmlFor="nome">Nome *</label>
@@ -41,8 +59,13 @@ export function Clientes() {
             <label className={rotuloCampo} htmlFor="observacoes">Observações</label>
             <input id="observacoes" className={campo} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
           </div>
-          <div className="sm:col-span-2">
-            <button type="submit" className={botaoPrimario}>Cadastrar cliente</button>
+          <div className="flex gap-2 sm:col-span-2">
+            <button type="submit" className={botaoPrimario}>
+              {editandoId ? 'Salvar alterações' : 'Cadastrar cliente'}
+            </button>
+            {editandoId && (
+              <button type="button" className={botaoSecundario} onClick={limpar}>Cancelar</button>
+            )}
           </div>
         </form>
       </Card>
@@ -69,7 +92,10 @@ export function Clientes() {
                     <td className="py-3 pr-4 text-ink-soft">{c.telefone || '—'}</td>
                     <td className="py-3 pr-4 text-ink-soft">{c.observacoes || '—'}</td>
                     <td className="py-3 pr-4 text-ink-soft">{c.ativo ? 'Ativo' : 'Inativo'}</td>
-                    <td className="py-3 text-right">
+                    <td className="space-x-2 whitespace-nowrap py-3 text-right">
+                      <button type="button" className={botaoSecundario} onClick={() => editar(c)}>
+                        Editar
+                      </button>
                       <button type="button" className={botaoSecundario} onClick={() => alternarAtivoCliente(c.id)}>
                         {c.ativo ? 'Inativar' : 'Reativar'}
                       </button>

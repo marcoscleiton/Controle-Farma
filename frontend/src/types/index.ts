@@ -10,6 +10,9 @@ export type Medicamento = {
   id: string
   nome: string
   apresentacao: string
+  // Quantos dias o fornecedor leva para entregar. Define com quanta antecedência
+  // o proprietário deve fazer o pedido antes da recompra prevista do cliente.
+  prazoFornecedorDias: number
 }
 
 export type FormaPagamento = 'dinheiro' | 'pix' | 'debito' | 'credito' | 'outro'

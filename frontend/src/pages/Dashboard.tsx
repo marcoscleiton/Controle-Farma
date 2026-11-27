@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, CalendarClock, Pill, Users } from 'lucide-react'
+import { AlertTriangle, CalendarClock, Pill, Truck, Users } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { StatCard } from '../components/ui/StatCard'
 import { StatusBadge } from '../components/ui/StatusBadge'
-import { useDados } from '../context/DadosContext'
+import { useDados } from '../context/useDados'
 import { formatarData, somarDias, textoDias } from '../utils/datas'
 import { calcularPrevisoes } from '../utils/previsoes'
 
@@ -12,7 +12,7 @@ export function Dashboard() {
 
   const ativos = clientes.filter((c) => c.ativo)
   const idsAtivos = new Set(ativos.map((c) => c.id))
-  const previsoes = calcularPrevisoes(compras).filter((p) =>
+  const previsoes = calcularPrevisoes(compras, medicamentos).filter((p) =>
     idsAtivos.has(p.clienteId),
   )
   const atrasadas = previsoes.filter((p) => p.status === 'atrasado')
@@ -21,6 +21,12 @@ export function Dashboard() {
   )
   const alertas = previsoes.filter((p) => p.status !== 'futuro')
   const clientesComAlerta = new Set(alertas.map((p) => p.clienteId)).size
+
+  // Pedidos ao fornecedor: reposição nos próximos 7 dias (ou já passou),
+  // enquanto o cliente ainda não passou da data prevista de recompra.
+  const pedidos = previsoes
+    .filter((p) => p.diasReposicao <= 7 && p.dias >= 0)
+    .sort((a, b) => a.diasReposicao - b.diasReposicao)
 
   const recentes = [...compras]
     .sort((a, b) => b.dataCompra.localeCompare(a.dataCompra))
@@ -50,7 +56,7 @@ export function Dashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card titulo="Alertas de reposição" className="lg:col-span-2">
+        <Card titulo="Alertas de recompra" className="lg:col-span-2">
           {alertas.length === 0 ? (
             <p className="text-sm text-ink-soft">
               Nenhum alerta no momento. Cadastre clientes, medicamentos e
@@ -105,6 +111,46 @@ export function Dashboard() {
           </dl>
         </Card>
       </div>
+
+      <Card
+        titulo="Pedir ao fornecedor (próximos 7 dias)"
+        acao={<Truck size={18} className="text-brand-600" />}
+      >
+        {pedidos.length === 0 ? (
+          <p className="text-sm text-ink-soft">
+            Nenhum pedido ao fornecedor para os próximos 7 dias.
+          </p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {pedidos.map((p) => (
+              <li
+                key={`${p.clienteId}-${p.medicamentoId}`}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-ink">
+                    {nomeMedicamento(p.medicamentoId)}
+                  </p>
+                  <p className="truncate text-sm text-ink-soft">
+                    para {nomeCliente(p.clienteId)} · recompra em{' '}
+                    {formatarData(p.dataPrevista)}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right text-sm">
+                  <p className="text-ink">pedir até {formatarData(p.dataReposicao)}</p>
+                  <p
+                    className={
+                      p.diasReposicao < 0 ? 'font-medium text-status-danger' : 'text-ink-soft'
+                    }
+                  >
+                    {textoDias(p.diasReposicao)}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <Card
         titulo="Histórico recente"

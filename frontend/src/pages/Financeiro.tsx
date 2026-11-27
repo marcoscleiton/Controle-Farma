@@ -3,7 +3,7 @@ import { Banknote, Receipt, ShoppingBag } from 'lucide-react'
 import { Card } from '../components/ui/Card'
 import { StatCard } from '../components/ui/StatCard'
 import { botaoSecundario, campo, rotuloCampo } from '../components/ui/estilos'
-import { useDados } from '../context/DadosContext'
+import { useDados } from '../context/useDados'
 import { formatarData, hojeISO } from '../utils/datas'
 import { formasPagamento, formatarMoeda, rotuloPagamento } from '../utils/dinheiro'
 

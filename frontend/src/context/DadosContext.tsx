@@ -1,6 +1,9 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Cliente, Compra, Medicamento } from '../types'
+import { PRAZO_FORNECEDOR_PADRAO } from '../utils/previsoes'
+import { DadosContext } from './contexto'
+import type { DadosCliente, DadosCompra, DadosMedicamento } from './contexto'
 
 const CHAVES = {
   clientes: 'controle-farma:clientes',
@@ -17,26 +20,16 @@ function carregar<T>(chave: string): T[] {
   }
 }
 
-type DadosContextValue = {
-  clientes: Cliente[]
-  medicamentos: Medicamento[]
-  compras: Compra[]
-  adicionarCliente: (dados: Omit<Cliente, 'id' | 'ativo'>) => void
-  alternarAtivoCliente: (id: string) => void
-  adicionarMedicamento: (dados: Omit<Medicamento, 'id'>) => void
-  removerMedicamento: (id: string) => boolean
-  adicionarCompra: (dados: Omit<Compra, 'id'>) => void
-  removerCompra: (id: string) => void
-}
-
-const DadosContext = createContext<DadosContextValue | null>(null)
-
 export function DadosProvider({ children }: { children: ReactNode }) {
   const [clientes, setClientes] = useState<Cliente[]>(() =>
     carregar<Cliente>(CHAVES.clientes),
   )
   const [medicamentos, setMedicamentos] = useState<Medicamento[]>(() =>
-    carregar<Medicamento>(CHAVES.medicamentos),
+    // Medicamentos salvos antes do campo "prazoFornecedorDias" existir recebem o padrão
+    carregar<Medicamento>(CHAVES.medicamentos).map((m) => ({
+      ...m,
+      prazoFornecedorDias: m.prazoFornecedorDias ?? PRAZO_FORNECEDOR_PADRAO,
+    })),
   )
   const [compras, setCompras] = useState<Compra[]>(() =>
     carregar<Compra>(CHAVES.compras).map((c) => ({
@@ -57,11 +50,15 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(CHAVES.compras, JSON.stringify(compras))
   }, [compras])
 
-  function adicionarCliente(dados: Omit<Cliente, 'id' | 'ativo'>) {
+  function adicionarCliente(dados: DadosCliente) {
     setClientes((atual) => [
       ...atual,
       { id: crypto.randomUUID(), ativo: true, ...dados },
     ])
+  }
+
+  function atualizarCliente(id: string, dados: DadosCliente) {
+    setClientes((atual) => atual.map((c) => (c.id === id ? { ...c, ...dados } : c)))
   }
 
   function alternarAtivoCliente(id: string) {
@@ -70,8 +67,12 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  function adicionarMedicamento(dados: Omit<Medicamento, 'id'>) {
+  function adicionarMedicamento(dados: DadosMedicamento) {
     setMedicamentos((atual) => [...atual, { id: crypto.randomUUID(), ...dados }])
+  }
+
+  function atualizarMedicamento(id: string, dados: DadosMedicamento) {
+    setMedicamentos((atual) => atual.map((m) => (m.id === id ? { ...m, ...dados } : m)))
   }
 
   function removerMedicamento(id: string): boolean {
@@ -80,8 +81,12 @@ export function DadosProvider({ children }: { children: ReactNode }) {
     return true
   }
 
-  function adicionarCompra(dados: Omit<Compra, 'id'>) {
+  function adicionarCompra(dados: DadosCompra) {
     setCompras((atual) => [...atual, { id: crypto.randomUUID(), ...dados }])
+  }
+
+  function atualizarCompra(id: string, dados: DadosCompra) {
+    setCompras((atual) => atual.map((c) => (c.id === id ? { ...c, ...dados } : c)))
   }
 
   function removerCompra(id: string) {
@@ -95,20 +100,17 @@ export function DadosProvider({ children }: { children: ReactNode }) {
         medicamentos,
         compras,
         adicionarCliente,
+        atualizarCliente,
         alternarAtivoCliente,
         adicionarMedicamento,
+        atualizarMedicamento,
         removerMedicamento,
         adicionarCompra,
+        atualizarCompra,
         removerCompra,
       }}
     >
       {children}
     </DadosContext.Provider>
   )
-}
-
-export function useDados(): DadosContextValue {
-  const contexto = useContext(DadosContext)
-  if (!contexto) throw new Error('useDados precisa estar dentro de DadosProvider')
-  return contexto
 }

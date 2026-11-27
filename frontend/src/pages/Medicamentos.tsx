@@ -2,19 +2,45 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Card } from '../components/ui/Card'
 import { botaoPrimario, botaoSecundario, campo, rotuloCampo } from '../components/ui/estilos'
-import { useDados } from '../context/DadosContext'
+import { useDados } from '../context/useDados'
+import type { Medicamento } from '../types'
+import { PRAZO_FORNECEDOR_PADRAO } from '../utils/previsoes'
 
 export function Medicamentos() {
-  const { medicamentos, adicionarMedicamento, removerMedicamento } = useDados()
+  const { medicamentos, adicionarMedicamento, atualizarMedicamento, removerMedicamento } = useDados()
+  // null = cadastrando um novo; com id = editando esse medicamento
+  const [editandoId, setEditandoId] = useState<string | null>(null)
   const [nome, setNome] = useState('')
   const [apresentacao, setApresentacao] = useState('')
+  const [prazo, setPrazo] = useState(String(PRAZO_FORNECEDOR_PADRAO))
 
   function salvar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!nome.trim()) return
-    adicionarMedicamento({ nome: nome.trim(), apresentacao: apresentacao.trim() })
+    const prazoDias = Number(prazo)
+    if (!nome.trim() || !Number.isInteger(prazoDias) || prazoDias < 0) return
+    const dados = {
+      nome: nome.trim(),
+      apresentacao: apresentacao.trim(),
+      prazoFornecedorDias: prazoDias,
+    }
+    if (editandoId) atualizarMedicamento(editandoId, dados)
+    else adicionarMedicamento(dados)
+    limpar()
+  }
+
+  function limpar() {
+    setEditandoId(null)
     setNome('')
     setApresentacao('')
+    setPrazo(String(PRAZO_FORNECEDOR_PADRAO))
+  }
+
+  function editar(m: Medicamento) {
+    setEditandoId(m.id)
+    setNome(m.nome)
+    setApresentacao(m.apresentacao)
+    setPrazo(String(m.prazoFornecedorDias))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function remover(id: string) {
@@ -28,7 +54,7 @@ export function Medicamentos() {
 
   return (
     <div className="space-y-6">
-      <Card titulo="Novo medicamento">
+      <Card titulo={editandoId ? 'Editar medicamento' : 'Novo medicamento'}>
         <form onSubmit={salvar} className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={rotuloCampo} htmlFor="nome">Nome *</label>
@@ -38,8 +64,17 @@ export function Medicamentos() {
             <label className={rotuloCampo} htmlFor="apresentacao">Apresentação (ex.: 50 mg, 30 comprimidos)</label>
             <input id="apresentacao" className={campo} value={apresentacao} onChange={(e) => setApresentacao(e.target.value)} />
           </div>
-          <div className="sm:col-span-2">
-            <button type="submit" className={botaoPrimario}>Cadastrar medicamento</button>
+          <div>
+            <label className={rotuloCampo} htmlFor="prazo">Prazo de entrega do fornecedor (dias) *</label>
+            <input id="prazo" type="number" min="0" step="1" className={campo} value={prazo} onChange={(e) => setPrazo(e.target.value)} required />
+          </div>
+          <div className="flex gap-2 sm:col-span-2">
+            <button type="submit" className={botaoPrimario}>
+              {editandoId ? 'Salvar alterações' : 'Cadastrar medicamento'}
+            </button>
+            {editandoId && (
+              <button type="button" className={botaoSecundario} onClick={limpar}>Cancelar</button>
+            )}
           </div>
         </form>
       </Card>
@@ -53,11 +88,18 @@ export function Medicamentos() {
               <li key={m.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <p className="truncate font-medium text-ink">{m.nome}</p>
-                  <p className="truncate text-sm text-ink-soft">{m.apresentacao || '—'}</p>
+                  <p className="truncate text-sm text-ink-soft">
+                    {m.apresentacao || '—'} · fornecedor entrega em {m.prazoFornecedorDias} dia(s)
+                  </p>
                 </div>
-                <button type="button" className={botaoSecundario} onClick={() => remover(m.id)}>
-                  Remover
-                </button>
+                <div className="flex shrink-0 gap-2">
+                  <button type="button" className={botaoSecundario} onClick={() => editar(m)}>
+                    Editar
+                  </button>
+                  <button type="button" className={botaoSecundario} onClick={() => remover(m.id)}>
+                    Remover
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

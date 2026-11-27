@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 
@@ -11,11 +12,15 @@ const titulos: Record<string, string> = {
 
 export function Header({ onAbrirMenu }: { onAbrirMenu: () => void }) {
   const { pathname } = useLocation()
-  const hoje = new Date().toLocaleDateString('pt-BR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  })
+  // A data é calculada uma vez, quando o Header aparece, e não a cada re-render
+  // (new Date() é "impuro": cada chamada pode dar um resultado diferente).
+  const [hoje] = useState(() =>
+    new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }),
+  )
 
   return (
     <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-line bg-surface/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
